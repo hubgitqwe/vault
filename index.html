@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账号密码保险箱</title>
+<style>
+  :root {
+    --bg: #0f1923;
+    --surface: #1a2735;
+    --surface2: #223344;
+    --border: #2e4a5f;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --text: #e8edf2;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --radius: 10px;
+    --admin-accent: #f59e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ===== LOGIN PAGE ===== */
+  .login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 20%, rgba(34,197,94,0.06) 0%, transparent 50%);
+  }
+  .login-page.hidden { display: none; }
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    animation: fadeUp 0.4s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .login-box .login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .login-box .login-logo svg { width: 32px; height: 32px; }
+  .login-box .login-subtitle {
+    text-align: center;
+    color: var(--text3);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .login-tab-bar {
+    display: flex;
+    margin-bottom: 24px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .login-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+  .login-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .login-form .form-group { margin-bottom: 18px; }
+  .login-form .form-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .login-form .form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-form .form-group input:focus { border-color: var(--accent); }
+  .login-form .form-group input::placeholder { color: var(--text3); }
+  .remember-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .remember-row label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .remember-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .login-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .login-btn:hover { background: var(--accent-hover); }
+  .login-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 16px;
+    line-height: 1.8;
+  }
+
+  /* Quick user list on login */
+  .quick-users {
+    margin-bottom: 24px;
+    padding-top: 4px;
+  }
+  .quick-users-title {
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .quick-user-list {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .quick-user-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+  .quick-user-item:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+  .quick-user-item .qavatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .quick-user-item .qavatar.admin { background: var(--admin-accent); }
+  .quick-user-item .qavatar.member { background: var(--accent); }
+  .quick-user-item .qname {
+    font-size: 12px;
+    color: var(--text2);
+    max-width: 64px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .quick-user-item .qrole {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+  .qrole.admin { background: rgba(245,158,11,0.2); color: #f59e0b; }
+  .qrole.member { background: rgba(59,130,246,0.2); color: #3b82f6; }
+
+  /* ===== Shared: Buttons ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+  }
+  .btn-primary { background: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--surface2); border-color: var(--accent); }
+  .btn-danger { background: var(--danger); }
+  .btn-danger:hover { background: var(--danger-hover); }
+  .btn-ghost { background: transparent; padding: 6px 10px; }
+  .btn-ghost:hover { background: var(--surface2); }
+  .btn-sm { padding: 5px 10px; font-size: 13px; }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-admin { background: var(--admin-accent); }
+  .btn-admin:hover { background: #d97706; }
+
+  /* ===== Shared: Header ===== */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-admin { background: linear-gradient(135deg, #2a1f0a 0%, #0f1923 100%); }
+  .header-member { background: linear-gradient(135deg, #1a2735 0%, #0f1923 100%); }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .logo svg { width: 26px; height: 26px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .user-badge.admin-badge { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); }
+  .user-badge.member-badge { background: var(--surface2); border: 1px solid var(--border); }
+  .user-badge .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .avatar.admin { background: var(--admin-accent); }
+  .avatar.member { background: var(--accent); }
+  .role-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .role-tag.admin { background: var(--admin-accent); color: #000; }
+  .role-tag.member { background: var(--accent); color: #fff; }
+
+  /* ===== Shared: Container ===== */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* ===== Shared: Stats ===== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .stat-card .label { font-size: 13px; color: var(--text3); margin-bottom: 4px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; }
+
+  /* ===== ADMIN PAGE ===== */
+  .admin-page { display: none; }
+  .admin-page.active { display: block; }
+
+  .admin-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+    border: 1px solid var(--border);
+  }
+  .admin-tab {
+    flex: 1;
+    padding: 12px 20px;
+    text-align: center;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+  .admin-tab.active {
+    background: var(--admin-accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .admin-tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  /* User cards for admin */
+  .user-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .user-card:hover {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 1px var(--admin-accent), 0 4px 20px rgba(245,158,11,0.1);
+  }
+  .user-card.is-self {
+    border-color: var(--admin-accent);
+    background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, var(--surface) 100%);
+  }
+  .user-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .user-card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .user-card-avatar.admin { background: var(--admin-accent); }
+  .user-card-avatar.member { background: var(--accent); }
+  .user-card-info { flex: 1; min-width: 0; }
+  .user-card-name { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .user-card-username { font-size: 12px; color: var(--text3); }
+  .user-card-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  .user-card-stat { text-align: center; flex: 1; }
+  .user-card-stat .num { font-size: 20px; font-weight: 700; color: var(--text); }
+  .user-card-stat .desc { font-size: 11px; color: var(--text3); }
+  .user-card-actions { display: flex; gap: 8px; }
+  .user-card-time { font-size: 11px; color: var(--text3); margin-top: 10px; }
+
+  /* Admin view-user-vault panel */
+  .admin-vault-panel {
+    display: none;
+  }
+  .admin-vault-panel.active { display: block; }
+  .admin-vault-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .admin-vault-header .back-btn {
+    padding: 8px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .admin-vault-header .back-btn:hover { border-color: var(--admin-accent); }
+  .admin-vault-title { flex: 1; font-size: 16px; font-weight: 600; }
+  .admin-vault-note { font-size: 12px; color: var(--warning); }
+
+  /* ===== MEMBER PAGE ===== */
+  .member-page { display: none; }
+  .member-page.active { display: block; }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--text3);
+  }
+  .filter-select {
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 4px 20px rgba(59,130,246,0.1);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 17px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-category {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  .card-actions { display: flex; gap: 2px; }
+  .card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(46,74,95,0.4);
+  }
+  .card-row:last-child { border-bottom: none; }
+  .card-row .label { color: var(--text3); min-width: 60px; flex-shrink: 0; }
+  .card-row .value {
+    flex: 1;
+    margin: 0 8px;
+    word-break: break-all;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 13px;
+  }
+  .card-row .value.hidden-pw {
+    color: transparent;
+    text-shadow: 0 0 8px var(--text3);
+    user-select: none;
+  }
+  .card-row .value.hidden-pw.revealed {
+    color: var(--text);
+    text-shadow: none;
+    user-select: auto;
+  }
+  .card-row .actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .card-note {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .card-footer {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state p { font-size: 16px; margin-bottom: 8px; }
+
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px 16px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 30px;
+    width: 100%;
+    max-width: 520px;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .pw-gen-row { display: flex; gap: 8px; }
+  .pw-gen-row input { flex: 1; }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .pw-strength { margin-top: 6px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .pw-strength-bar { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; }
+  .pw-strength-text { font-size: 12px; margin-top: 3px; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 12px 20px; border-radius: 8px; font-size: 14px; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; max-width: 320px; }
+  .toast-success { background: #166534; color: #bbf7d0; }
+  .toast-error { background: #991b1b; color: #fecaca; }
+  .toast-info { background: #1e3a5f; color: #bfdbfe; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+  /* Confirm */
+  .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 250; justify-content: center; align-items: center; }
+  .confirm-overlay.active { display: flex; }
+  .confirm-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 380px; width: 90%; text-align: center; }
+  .confirm-box p { margin-bottom: 20px; font-size: 15px; }
+  .confirm-box .btns { display: flex; gap: 10px; justify-content: center; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header-inner { padding: 0 16px; }
+    .container { padding: 16px; }
+    .card-grid, .user-card-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .modal { padding: 20px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .login-box { padding: 28px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN PAGE ===== -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      账号密码保险箱
+    </div>
+    <div class="login-subtitle">安全存储，只属于你的密码管家</div>
+    <div class="quick-users" id="quickUsers"></div>
+    <div class="login-tab-bar">
+      <button class="login-tab active" onclick="switchTab('login')">登录</button>
+      <button class="login-tab" onclick="switchTab('register')">注册</button>
+    </div>
+    <div class="login-form" id="loginForm">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="loginUser" placeholder="输入你的用户名" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPass" placeholder="输入密码" autocomplete="current-password">
+      </div>
+      <div class="remember-row">
+        <label><input type="checkbox" id="rememberMe" checked> 记住我（7天内免登录）</label>
+      </div>
+      <button class="login-btn" onclick="doLogin()">登录</button>
+    </div>
+    <div class="login-form" id="registerForm" style="display:none">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="regUser" placeholder="英文/数字/下划线，2-20位" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>显示昵称（可选）</label>
+        <input type="text" id="regNick" placeholder="别人看到的名称">
+      </div>
+      <div class="form-group">
+        <label>设置密码</label>
+        <input type="password" id="regPass" placeholder="至少6位" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>确认密码</label>
+        <input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="new-password">
+      </div>
+      <button class="login-btn" onclick="doRegister()">注册</button>
+    </div>
+    <div class="login-hint">
+      第一个注册的用户自动成为管理员<br>
+      管理员可查看所有用户数据，普通用户只能看自己的
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PAGE ===== -->
+<div class="admin-page" id="adminPage">
+  <div class="header header-admin">
+    <div class="header-inner">
+      <div class="logo" style="color:var(--admin-accent)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+        管理后台
+      </div>
+      <div class="header-right">
+        <div class="user-badge admin-badge">
+          <div class="avatar admin" id="adminAvatar"></div>
+          <span id="adminDisplay"></span>
+          <span class="role-tag admin">管理员</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-admin" onclick="openAddModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增账号
+          </button>
+          <button class="btn btn-outline" onclick="doLogout()" style="color:var(--danger);border-color:var(--danger)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            退出
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="stats" id="adminStats"></div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('users')">用户管理</button>
+      <button class="admin-tab" onclick="switchAdminTab('myvault')">我的密码库</button>
+    </div>
+    <!-- Users list -->
+    <div id="adminUsersPanel">
+      <div class="user-card-grid" id="adminUserGrid"></div>
+    </div>
+    <!-- Admin's own vault -->
+    <div id="adminMyVaultPanel" style="display:none">
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="adminSearchInput" placeholder="搜索..." oninput="renderAdminVault()">
+        </div>
+        <select class="filter-select" id="adminCatFilter" onchange="renderAdminVault()">
+          <option value="">全部分类</option>
+        </select>
+      </div>
+      <div class="card-grid" id="adminVaultGrid"></div>
+    </div>
+    <!-- View another user's vault -->
+    <div class="admin-vault-panel" id="adminViewVaultPanel">
+      <div class="admin-vault-header">
+        <button class="back-btn" onclick="closeViewVault()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          返回用户列表
+        </button>
+        <div class="admin-vault-title" id="viewVaultTitle"></div>
+        <div class="admin-vault-note">只读视图 - 仅管理员可查看</div>
+      </div>
+      <div class="card-grid" id="viewVaultGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MEMBER PAGE ===== -->
+<div class="member-page" id="memberPage">
+  <div class="header header-member">
+    <div class="header-inner">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        账号密码保险箱
+      </div>
+      <div class="header-right">
+        <div class="user-badge member-badge">
+          <div class="avatar member" id="memberAvatar"></div>
+          <span id="memberDisplay"></span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline" onclick="exportData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            导出
+          </button>
+          <button class="btn btn-outline" onclick="importData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            导入
+          </button>
+          <button class="btn btn-primary" onclick="openAddModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增账号
+          </button>
+          <button class="btn btn-outline" onclick="doLogout()" style="color:var(--danger);border-color:var(--danger)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            退出
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="stats" id="memberStats"></div>
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="搜索网站名、用户名、备注..." oninput="renderCards()">
+      </div>
+      <select class="filter-select" id="categoryFilter" onchange="renderCards()">
+        <option value="">全部分类</option>
+      </select>
+      <select class="filter-select" id="sortSelect" onchange="renderCards()">
+        <option value="newest">最新添加</option>
+        <option value="oldest">最早添加</option>
+        <option value="alpha">按名称排序</option>
+      </select>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span id="modalTitleText">新增账号</span>
+    </h2>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <div class="form-group">
+        <label>网站 / 应用名称 *</label>
+        <input type="text" id="fName" placeholder="如：微信、GitHub">
+      </div>
+      <div class="form-group">
+        <label>分类</label>
+        <select id="fCategory">
+          <option value="社交">社交</option>
+          <option value="购物">购物</option>
+          <option value="金融">金融</option>
+          <option value="工作">工作</option>
+          <option value="娱乐">娱乐</option>
+          <option value="学习">学习</option>
+          <option value="邮箱">邮箱</option>
+          <option value="开发">开发</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>网址</label>
+      <input type="text" id="fUrl" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>用户名 / 邮箱 / 手机号 *</label>
+      <input type="text" id="fUsername" placeholder="登录账号">
+    </div>
+    <div class="form-group">
+      <label>密码 *</label>
+      <div class="pw-gen-row">
+        <input type="text" id="fPassword" placeholder="密码" oninput="updateStrength()">
+        <button class="btn btn-outline btn-sm" onclick="togglePwVisibility('fPassword', this)">👁</button>
+        <button class="btn btn-outline btn-sm" onclick="generatePassword()">🎲</button>
+      </div>
+      <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
+      <div class="pw-strength-text" id="pwStrengthText"></div>
+    </div>
+    <div class="form-group">
+      <label>备注</label>
+      <textarea id="fNote" placeholder="密保问题、绑定手机等"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveEntry()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p id="confirmText">确定要删除吗？</p>
+    <div class="btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-danger" id="confirmBtn">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== Constants =====
+const USERS_KEY = 'vault_users';
+const SESSION_KEY = 'vault_session';
+const ADMIN_ROLE = 'admin';
+const MEMBER_ROLE = 'member';
+
+// ===== Crypto =====
+async function hashPassword(password, salt) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salt + password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ===== Storage =====
+function getUsers() { try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch { return {}; } }
+function saveUsers(users) { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+function getCurrentSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
+function setSession(user, remember) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    username: user.username,
+    nickname: user.nickname || user.username,
+    role: user.role || MEMBER_ROLE,
+    loginAt: Date.now(),
+    remember: remember
+  }));
+}
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
+function isSessionValid(s) {
+  if (!s || !s.username) return false;
+  const maxAge = s.remember ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
+  return (Date.now() - s.loginAt) < maxAge;
+}
+function getUserDataKey(username) { return 'vault_data_' + username; }
+function loadUserData(username) { try { return JSON.parse(localStorage.getItem(getUserDataKey(username))) || []; } catch { return []; } }
+function saveUserData(username, data) { localStorage.setItem(getUserDataKey(username), JSON.stringify(data)); }
+
+function getUserCount() { return Object.keys(getUsers()).length; }
+
+// ===== State =====
+let currentUser = null;  // session object
+let accounts = [];       // current user's vault data
+let viewingUsername = null; // admin viewing another user
+let currentAdminTab = 'users';
+
+// ===== Helpers =====
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function getCategoryIcon(cat) {
+  return { '社交':'💬','购物':'🛒','金融':'💰','工作':'💼','娱乐':'🎮','学习':'📚','邮箱':'📧','开发':'💻','其他':'📌' }[cat] || '📌';
+}
+function getStrength(pw) {
+  if (!pw) return 0;
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (pw.length >= 12) s++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
+  if (/\d/.test(pw)) s++;
+  if (/[^a-zA-Z0-9]/.test(pw)) s++;
+  return Math.min(s, 4);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('已复制到剪贴板')).catch(() => {
+    const ta = document.createElement('textarea'); ta.value = text;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    toast('已复制到剪贴板');
+  });
+}
+
+// ===== Login Page =====
+function switchTab(tab) {
+  document.querySelectorAll('.login-tab').forEach((t, i) => {
+    t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1));
+  });
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+}
+
+function renderQuickUsers() {
+  const users = getUsers();
+  const entries = Object.values(users);
+  const container = document.getElementById('quickUsers');
+  if (!entries.length) { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="quick-users-title">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      已有账号，点击快速登录
+    </div>
+    <div class="quick-user-list">
+      ${entries.map(u => `
+        <div class="quick-user-item" onclick="quickFillUser('${esc(u.username)}')">
+          <div class="qavatar ${u.role === ADMIN_ROLE ? 'admin' : 'member'}">${(u.nickname || u.username).charAt(0).toUpperCase()}</div>
+          <div class="qname">${esc(u.nickname || u.username)}</div>
+          <div class="qrole ${u.role === ADMIN_ROLE ? 'admin' : 'member'}">${u.role === ADMIN_ROLE ? '管理员' : '成员'}</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function quickFillUser(username) {
+  document.getElementById('loginUser').value = username;
+  document.getElementById('loginPass').focus();
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const password = document.getElementById('loginPass').value;
+  const remember = document.getElementById('rememberMe').checked;
+  if (!username) { toast('请输入用户名', 'error'); return; }
+  if (!password) { toast('请输入密码', 'error'); return; }
+  const users = getUsers();
+  if (!users[username]) { toast('用户不存在，请先注册', 'error'); return; }
+  const hashed = await hashPassword(password, 'vault_salt_' + username);
+  if (users[username].password !== hashed) { toast('密码错误', 'error'); return; }
+  setSession(users[username], remember);
+  enterApp();
+  toast('欢迎回来，' + (users[username].nickname || username));
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUser').value.trim().toLowerCase();
+  const nickname = document.getElementById('regNick').value.trim();
+  const password = document.getElementById('regPass').value;
+  const password2 = document.getElementById('regPass2').value;
+  if (!username) { toast('请输入用户名', 'error'); return; }
+  if (!/^[a-zA-Z0-9_]{2,20}$/.test(username)) { toast('用户名只能含英文、数字、下划线，2-20位', 'error'); return; }
+  if (!password) { toast('请设置密码', 'error'); return; }
+  if (password.length < 6) { toast('密码至少6位', 'error'); return; }
+  if (password !== password2) { toast('两次密码不一致', 'error'); return; }
+  const users = getUsers();
+  if (users[username]) { toast('该用户名已被注册', 'error'); return; }
+
+  const isFirstUser = Object.keys(users).length === 0;
+  const hashed = await hashPassword(password, 'vault_salt_' + username);
+  users[username] = {
+    username,
+    nickname: nickname || username,
+    password: hashed,
+    role: isFirstUser ? ADMIN_ROLE : MEMBER_ROLE,
+    createdAt: Date.now()
+  };
+  saveUsers(users);
+  setSession(users[username], true);
+  enterApp();
+  toast(isFirstUser ? '注册成功！你是管理员，可管理所有用户' : '注册成功，欢迎 ' + (nickname || username));
+}
+
+// ===== Enter App =====
+function enterApp() {
+  const session = getCurrentSession();
+  if (!session) return;
+  currentUser = session;
+  document.getElementById('loginPage').classList.add('hidden');
+
+  if (currentUser.role === ADMIN_ROLE) {
+    enterAdminPage();
+  } else {
+    enterMemberPage();
+  }
+}
+
+// ===== ADMIN PAGE =====
+function enterAdminPage() {
+  document.getElementById('adminPage').classList.add('active');
+  document.getElementById('memberPage').classList.remove('active');
+  const displayName = currentUser.nickname || currentUser.username;
+  document.getElementById('adminDisplay').textContent = displayName;
+  document.getElementById('adminAvatar').textContent = displayName.charAt(0).toUpperCase();
+  accounts = loadUserData(currentUser.username);
+  renderAdminStats();
+  renderAdminUsers();
+  renderAdminVault();
+}
+
+function renderAdminStats() {
+  const users = getUsers();
+  const entries = Object.values(users);
+  const totalEntries = entries.reduce((sum, u) => sum + loadUserData(u.username).length, 0);
+  const memberCount = entries.filter(u => u.role !== ADMIN_ROLE).length;
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-card"><div class="label">注册用户</div><div class="value">${entries.length}</div></div>
+    <div class="stat-card"><div class="label">普通成员</div><div class="value">${memberCount}</div></div>
+    <div class="stat-card"><div class="label">总密码条数</div><div class="value">${totalEntries}</div></div>
+    <div class="stat-card"><div class="label">我的密码</div><div class="value">${accounts.length}</div></div>
+  `;
+}
+
+function switchAdminTab(tab) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('adminUsersPanel').style.display = tab === 'users' ? '' : 'none';
+  document.getElementById('adminMyVaultPanel').style.display = tab === 'myvault' ? '' : 'none';
+  document.getElementById('adminViewVaultPanel').classList.remove('active');
+  if (tab === 'myvault') renderAdminVault();
+}
+
+function renderAdminUsers() {
+  const users = getUsers();
+  const entries = Object.values(users).sort((a, b) => {
+    if (a.role === ADMIN_ROLE) return -1;
+    if (b.role === ADMIN_ROLE) return 1;
+    return (a.createdAt || 0) - (b.createdAt || 0);
+  });
+  const grid = document.getElementById('adminUserGrid');
+  if (!entries.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>暂无用户</p></div>'; return; }
+
+  grid.innerHTML = entries.map(u => {
+    const isAdmin = u.role === ADMIN_ROLE;
+    const isSelf = currentUser.username === u.username;
+    const data = loadUserData(u.username);
+    const weakCount = data.filter(a => getStrength(a.password) < 2).length;
+    const cats = [...new Set(data.map(a => a.category))];
+    return `
+      <div class="user-card ${isSelf ? 'is-self' : ''}">
+        <div class="user-card-top">
+          <div class="user-card-avatar ${isAdmin ? 'admin' : 'member'}">${(u.nickname || u.username).charAt(0).toUpperCase()}</div>
+          <div class="user-card-info">
+            <div class="user-card-name">
+              ${esc(u.nickname || u.username)}
+              <span class="role-tag ${isAdmin ? 'admin' : 'member'}">${isAdmin ? '管理员' : '成员'}</span>
+              ${isSelf ? '<span style="font-size:11px;color:var(--admin-accent);margin-left:4px">（我自己）</span>' : ''}
+            </div>
+            <div class="user-card-username">@${esc(u.username)}</div>
+          </div>
+        </div>
+        <div class="user-card-stats">
+          <div class="user-card-stat"><div class="num">${data.length}</div><div class="desc">密码条数</div></div>
+          <div class="user-card-stat"><div class="num" style="color:${weakCount ? '#ef4444' : '#22c55e'}">${weakCount}</div><div class="desc">弱密码</div></div>
+          <div class="user-card-stat"><div class="num">${cats.length}</div><div class="desc">分类</div></div>
+        </div>
+        <div class="user-card-actions">
+          ${data.length > 0 ? `<button class="btn btn-outline btn-sm" onclick="viewUserVault('${esc(u.username)}')">查看密码库</button>` : ''}
+          ${isSelf ? `<button class="btn btn-admin btn-sm" onclick="switchAdminTab('myvault');document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.admin-tab')[1].classList.add('active');">管理我的密码</button>` : ''}
+          ${!isSelf ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteUser('${esc(u.username)}')">删除用户</button>` : ''}
+        </div>
+        <div class="user-card-time">注册于 ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-CN') : '-'}</div>
+      </div>`;
+  }).join('');
+}
+
+function viewUserVault(username) {
+  viewingUsername = username;
+  const users = getUsers();
+  const u = users[username];
+  if (!u) return;
+  const data = loadUserData(username);
+
+  document.getElementById('adminUsersPanel').style.display = 'none';
+  document.getElementById('adminMyVaultPanel').style.display = 'none';
+  document.getElementById('adminViewVaultPanel').classList.add('active');
+
+  const isAdmin = u.role === ADMIN_ROLE;
+  document.getElementById('viewVaultTitle').textContent = `${u.nickname || u.username} 的密码库（${data.length} 条）`;
+
+  const grid = document.getElementById('viewVaultGrid');
+  if (!data.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>该用户暂无密码记录</p></div>';
+    return;
+  }
+  grid.innerHTML = data.map(a => renderVaultCard(a, true)).join('');
+}
+
+function closeViewVault() {
+  viewingUsername = null;
+  document.getElementById('adminViewVaultPanel').classList.remove('active');
+  document.getElementById('adminUsersPanel').style.display = '';
+  // Reset tabs
+  document.querySelectorAll('.admin-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
+  currentAdminTab = 'users';
+}
+
+function renderAdminVault() {
+  const search = (document.getElementById('adminSearchInput')?.value || '').toLowerCase();
+  const catFilter = document.getElementById('adminCatFilter')?.value || '';
+
+  // Update category filter
+  const cats = [...new Set(accounts.map(a => a.category))].sort();
+  const sel = document.getElementById('adminCatFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部分类</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = cur;
+
+  let filtered = accounts.filter(a => {
+    if (catFilter && a.category !== catFilter) return false;
+    if (search) return a.name.toLowerCase().includes(search) || a.username.toLowerCase().includes(search) || (a.note||'').toLowerCase().includes(search);
+    return true;
+  });
+  filtered.sort((a, b) => b.createdAt - a.createdAt);
+
+  const grid = document.getElementById('adminVaultGrid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>还没有添加任何账号</p><p style="font-size:14px">点击「新增账号」开始记录</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(a => renderVaultCard(a, false)).join('');
+}
+
+function deleteUser(username) {
+  const users = getUsers();
+  if (!users[username]) return;
+  const nickname = users[username].nickname || username;
+  pendingDeleteUserId = username;
+  pendingDeleteId = null;
+  document.getElementById('confirmText').textContent = `确定要删除用户「${nickname}」吗？该用户的所有密码数据将被永久清除。`;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+// ===== MEMBER PAGE =====
+function enterMemberPage() {
+  document.getElementById('memberPage').classList.add('active');
+  document.getElementById('adminPage').classList.remove('active');
+  const displayName = currentUser.nickname || currentUser.username;
+  document.getElementById('memberDisplay').textContent = displayName;
+  document.getElementById('memberAvatar').textContent = displayName.charAt(0).toUpperCase();
+  accounts = loadUserData(currentUser.username);
+  refreshMember();
+}
+
+function refreshMember() {
+  renderMemberStats();
+  updateCategoryFilter();
+  renderCards();
+}
+
+function renderMemberStats() {
+  const total = accounts.length;
+  const cats = {};
+  let weakCount = 0;
+  accounts.forEach(a => { cats[a.category] = (cats[a.category]||0) + 1; if (getStrength(a.password) < 2) weakCount++; });
+  const topCat = Object.entries(cats).sort((a,b) => b[1] - a[1])[0];
+  document.getElementById('memberStats').innerHTML = `
+    <div class="stat-card"><div class="label">总账号数</div><div class="value">${total}</div></div>
+    <div class="stat-card"><div class="label">分类数</div><div class="value">${Object.keys(cats).length}</div></div>
+    <div class="stat-card"><div class="label">最多分类</div><div class="value" style="font-size:20px">${topCat ? topCat[0] : '-'}</div></div>
+    <div class="stat-card"><div class="label">弱密码</div><div class="value" style="color:${weakCount ? '#ef4444' : '#22c55e'}">${weakCount}</div></div>
+  `;
+}
+
+function updateCategoryFilter() {
+  const cats = [...new Set(accounts.map(a => a.category))].sort();
+  const sel = document.getElementById('categoryFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">全部分类</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = cur;
+}
+
+function renderCards() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const catFilter = document.getElementById('categoryFilter').value;
+  const sort = document.getElementById('sortSelect').value;
+  let filtered = accounts.filter(a => {
+    if (catFilter && a.category !== catFilter) return false;
+    if (search) return a.name.toLowerCase().includes(search) || a.username.toLowerCase().includes(search) || (a.note||'').toLowerCase().includes(search) || (a.url||'').toLowerCase().includes(search);
+    return true;
+  });
+  if (sort === 'newest') filtered.sort((a,b) => b.createdAt - a.createdAt);
+  else if (sort === 'oldest') filtered.sort((a,b) => a.createdAt - b.createdAt);
+  else if (sort === 'alpha') filtered.sort((a,b) => a.name.localeCompare(b.name, 'zh'));
+  const grid = document.getElementById('cardGrid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <p>${search || catFilter ? '没有匹配的账号' : '还没有添加任何账号'}</p>
+      <p style="font-size:14px">${search || catFilter ? '试试其他关键词或分类' : '点击右上角「新增账号」开始记录'}</p>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(a => renderVaultCard(a, false)).join('');
+}
+
+// ===== Shared: Vault Card Renderer =====
+function renderVaultCard(a, readonly) {
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          ${getCategoryIcon(a.category)}
+          ${esc(a.name)}
+          <span class="card-category">${esc(a.category)}</span>
+        </div>
+        ${!readonly ? `<div class="card-actions">
+          <button class="btn btn-ghost btn-sm" title="编辑" onclick="openEditModal('${a.id}')">✏️</button>
+          <button class="btn btn-ghost btn-sm" title="删除" onclick="confirmDelete('${a.id}')">🗑️</button>
+        </div>` : ''}
+      </div>
+      ${a.url ? `<div class="card-row"><span class="label">网址</span><span class="value" style="font-family:inherit;font-size:13px"><a href="${esc(a.url)}" target="_blank" style="color:var(--accent);text-decoration:none">${esc(a.url)}</a></span><span class="actions"><button class="btn btn-ghost btn-sm" onclick="copyText('${esc(a.url)}')">📋</button></span></div>` : ''}
+      <div class="card-row">
+        <span class="label">账号</span>
+        <span class="value">${esc(a.username)}</span>
+        <span class="actions"><button class="btn btn-ghost btn-sm" onclick="copyText('${esc(a.username)}')">📋</button></span>
+      </div>
+      <div class="card-row">
+        <span class="label">密码</span>
+        <span class="value hidden-pw" id="pw-${a.id}">${esc(a.password)}</span>
+        <span class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleCardPw('${a.id}')">👁</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyText('${esc(a.password)}')">📋</button>
+        </span>
+      </div>
+      ${a.note ? `<div class="card-note">📝 ${esc(a.note)}</div>` : ''}
+      <div class="card-footer">添加于 ${new Date(a.createdAt).toLocaleString('zh-CN')}</div>
+    </div>`;
+}
+
+function toggleCardPw(id) {
+  const el = document.getElementById('pw-' + id);
+  if (el) el.classList.toggle('revealed');
+}
+
+// ===== Logout =====
+function doLogout() {
+  clearSession();
+  currentUser = null;
+  accounts = [];
+  viewingUsername = null;
+  document.getElementById('adminPage').classList.remove('active');
+  document.getElementById('memberPage').classList.remove('active');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  renderQuickUsers();
+}
+
+// ===== Add/Edit Modal =====
+function openAddModal() {
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitleText').textContent = '新增账号';
+  document.getElementById('fName').value = '';
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fUsername').value = '';
+  document.getElementById('fPassword').value = '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('fCategory').value = '其他';
+  document.getElementById('pwStrengthBar').style.width = '0';
+  document.getElementById('pwStrengthText').textContent = '';
+  document.getElementById('modal').classList.add('active');
+  document.getElementById('fName').focus();
+}
+
+function openEditModal(id) {
+  const a = accounts.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitleText').textContent = '编辑账号';
+  document.getElementById('fName').value = a.name;
+  document.getElementById('fUrl').value = a.url || '';
+  document.getElementById('fUsername').value = a.username;
+  document.getElementById('fPassword').value = a.password;
+  document.getElementById('fNote').value = a.note || '';
+  document.getElementById('fCategory').value = a.category;
+  updateStrength();
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function saveEntry() {
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('fName').value.trim();
+  const url = document.getElementById('fUrl').value.trim();
+  const username = document.getElementById('fUsername').value.trim();
+  const password = document.getElementById('fPassword').value;
+  const note = document.getElementById('fNote').value.trim();
+  const category = document.getElementById('fCategory').value;
+  if (!name) { toast('请填写网站/应用名称', 'error'); return; }
+  if (!username) { toast('请填写登录账号', 'error'); return; }
+  if (!password) { toast('请填写密码', 'error'); return; }
+  if (id) {
+    const idx = accounts.findIndex(a => a.id === id);
+    if (idx >= 0) accounts[idx] = { ...accounts[idx], name, url, username, password, note, category, updatedAt: Date.now() };
+    toast('账号已更新');
+  } else {
+    accounts.push({ id: genId(), name, url, username, password, note, category, createdAt: Date.now(), updatedAt: Date.now() });
+    toast('账号已添加');
+  }
+  saveUserData(currentUser.username, accounts);
+  closeModal();
+  if (currentUser.role === ADMIN_ROLE) { renderAdminVault(); renderAdminStats(); renderAdminUsers(); }
+  else refreshMember();
+}
+
+// ===== Delete =====
+let pendingDeleteId = null;
+let pendingDeleteUserId = null;
+
+function confirmDelete(id) {
+  const a = accounts.find(x => x.id === id);
+  if (!a) return;
+  pendingDeleteId = id;
+  pendingDeleteUserId = null;
+  document.getElementById('confirmText').textContent = `确定要删除「${a.name}」的账号吗？此操作不可恢复。`;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  pendingDeleteId = null;
+  pendingDeleteUserId = null;
+}
+
+document.getElementById('confirmBtn').onclick = function() {
+  if (pendingDeleteUserId) {
+    const users = getUsers();
+    const nickname = users[pendingDeleteUserId]?.nickname || pendingDeleteUserId;
+    delete users[pendingDeleteUserId];
+    saveUsers(users);
+    localStorage.removeItem(getUserDataKey(pendingDeleteUserId));
+    toast('用户 ' + nickname + ' 已删除');
+    pendingDeleteUserId = null;
+    renderAdminUsers();
+    renderAdminStats();
+    closeConfirm();
+    return;
+  }
+  if (pendingDeleteId) {
+    accounts = accounts.filter(a => a.id !== pendingDeleteId);
+    saveUserData(currentUser.username, accounts);
+    toast('已删除');
+    if (currentUser.role === ADMIN_ROLE) { renderAdminVault(); renderAdminStats(); renderAdminUsers(); }
+    else refreshMember();
+  }
+  closeConfirm();
+};
+
+// ===== Password Generator & Strength =====
+function generatePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let pw = '';
+  const arr = new Uint32Array(16);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < 16; i++) pw += chars[arr[i] % chars.length];
+  document.getElementById('fPassword').value = pw;
+  updateStrength();
+}
+
+function togglePwVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
+function updateStrength() {
+  const pw = document.getElementById('fPassword').value;
+  const s = getStrength(pw);
+  const bar = document.getElementById('pwStrengthBar');
+  const text = document.getElementById('pwStrengthText');
+  const levels = [
+    { w: '0%', c: '#64748b', t: '' },
+    { w: '25%', c: '#ef4444', t: '弱 — 建议加强' },
+    { w: '50%', c: '#f97316', t: '中等' },
+    { w: '75%', c: '#eab308', t: '较强' },
+    { w: '100%', c: '#22c55e', t: '强' },
+  ];
+  const l = levels[s];
+  bar.style.width = l.w;
+  bar.style.background = l.c;
+  text.textContent = l.t;
+  text.style.color = l.c;
+}
+
+// ===== Export / Import =====
+function exportData() {
+  if (!accounts.length) { toast('暂无数据可导出', 'error'); return; }
+  const blob = new Blob([JSON.stringify(accounts, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `密码保险箱_${currentUser.nickname || currentUser.username}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出');
+}
+
+function importData() { document.getElementById('importFile').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      let added = 0;
+      data.forEach(item => {
+        if (item.name && item.username && item.password) {
+          accounts.push({ id: item.id || genId(), name: item.name, url: item.url || '', username: item.username, password: item.password, note: item.note || '', category: item.category || '其他', createdAt: item.createdAt || Date.now(), updatedAt: item.updatedAt || Date.now() });
+          added++;
+        }
+      });
+      saveUserData(currentUser.username, accounts);
+      if (currentUser.role === ADMIN_ROLE) { renderAdminVault(); renderAdminStats(); }
+      else refreshMember();
+      toast(`成功导入 ${added} 条账号`);
+    } catch { toast('导入失败，文件格式不正确', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== Modal close on overlay =====
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(); });
+
+// ===== Keyboard =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); closeViewVault(); }
+  if (e.key === 'Enter' && !document.getElementById('loginPage').classList.contains('hidden')) {
+    if (document.getElementById('loginForm').style.display !== 'none') doLogin();
+    else doRegister();
+  }
+});
+
+// ===== Init =====
+(function init() {
+  const session = getCurrentSession();
+  if (session && isSessionValid(session)) {
+    const users = getUsers();
+    if (users[session.username]) {
+      // Refresh role from stored user data
+      session.role = users[session.username].role || MEMBER_ROLE;
+      currentUser = session;
+      enterApp();
+      return;
+    }
+  }
+  clearSession();
+  document.getElementById('loginPage').classList.remove('hidden');
+  renderQuickUsers();
+})();
+</script>
+</body>
+</html>

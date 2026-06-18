@@ -715,7 +715,7 @@
       账号密码保险箱
     </div>
     <div class="login-subtitle">安全存储，只属于你的密码管家</div>
-    <div class="quick-users" id="quickUsers"></div>
+    <div class="quick-users" id="quickUsers" style="display:none"></div>
     <div class="login-tab-bar">
       <button class="login-tab active" onclick="switchTab('login')">登录</button>
       <button class="login-tab" onclick="switchTab('register')">注册</button>
@@ -730,7 +730,7 @@
         <input type="password" id="loginPass" placeholder="输入密码" autocomplete="current-password">
       </div>
       <div class="remember-row">
-        <label><input type="checkbox" id="rememberMe" checked> 记住我（7天内免登录）</label>
+        <label><input type="checkbox" id="rememberMe" checked> 记住我（永久免登录）</label>
       </div>
       <button class="login-btn" onclick="doLogin()">登录</button>
     </div>
@@ -981,8 +981,9 @@ function setSession(user, remember) {
 function clearSession() { localStorage.removeItem(SESSION_KEY); }
 function isSessionValid(s) {
   if (!s || !s.username) return false;
-  const maxAge = s.remember ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
-  return (Date.now() - s.loginAt) < maxAge;
+  // Remember me = permanent; not remembered = 24 hours
+  if (s.remember) return true;
+  return (Date.now() - s.loginAt) < 24 * 3600 * 1000;
 }
 function getUserDataKey(username) { return 'vault_data_' + username; }
 function loadUserData(username) { try { return JSON.parse(localStorage.getItem(getUserDataKey(username))) || []; } catch { return []; } }
@@ -1038,23 +1039,26 @@ function switchTab(tab) {
 }
 
 function renderQuickUsers() {
+  const container = document.getElementById('quickUsers');
+  // Only show quick user list for admin (first user)
   const users = getUsers();
   const entries = Object.values(users);
-  const container = document.getElementById('quickUsers');
-  if (!entries.length) { container.innerHTML = ''; return; }
+  const hasAdmin = entries.some(u => u.role === ADMIN_ROLE);
+  if (!hasAdmin || !entries.length) { container.style.display = 'none'; container.innerHTML = ''; return; }
+  // Show only for admin - but since we can't know who's logging in, show only admin's avatar
+  const admin = entries.find(u => u.role === ADMIN_ROLE);
+  container.style.display = '';
   container.innerHTML = `
     <div class="quick-users-title">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      已有账号，点击快速登录
+      管理员快速登录
     </div>
     <div class="quick-user-list">
-      ${entries.map(u => `
-        <div class="quick-user-item" onclick="quickFillUser('${esc(u.username)}')">
-          <div class="qavatar ${u.role === ADMIN_ROLE ? 'admin' : 'member'}">${(u.nickname || u.username).charAt(0).toUpperCase()}</div>
-          <div class="qname">${esc(u.nickname || u.username)}</div>
-          <div class="qrole ${u.role === ADMIN_ROLE ? 'admin' : 'member'}">${u.role === ADMIN_ROLE ? '管理员' : '成员'}</div>
-        </div>
-      `).join('')}
+      <div class="quick-user-item" onclick="quickFillUser('${esc(admin.username)}')">
+        <div class="qavatar admin">${(admin.nickname || admin.username).charAt(0).toUpperCase()}</div>
+        <div class="qname">${esc(admin.nickname || admin.username)}</div>
+        <div class="qrole admin">管理员</div>
+      </div>
     </div>`;
 }
 
